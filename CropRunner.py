@@ -19,7 +19,7 @@ path to the folder containing these files.
 # *****************************************
 
 # Path to CSV data from database
-csv_export_path = "labeldata.csv"
+csv_export_path = "samples/labeldata.csv"
 # Path to panoramas downloaded using DownloadRunner.py
 gsv_pano_path = "/mnt/umiacs/Panoramas/scrapes4"
 # Path to location for saving the crops
@@ -272,7 +272,7 @@ def predict_crop_size(x, y, im_width, im_height, path_to_depth_file):
     return crop_size
 
 
-def make_single_crop(path_to_image, sv_image_x, sv_image_y, PanoYawDeg, output_filename, path_to_depth, draw_mark=False):
+def make_single_crop(path_to_image, sv_image_x, sv_image_y, PanoYawDeg, output_filename, path_to_depth, label_type, draw_mark=False):
     im_width = GSVImage.GSVImage.im_width
     im_height = GSVImage.GSVImage.im_height
     im = Image.open(path_to_image)
@@ -287,6 +287,9 @@ def make_single_crop(path_to_image, sv_image_x, sv_image_y, PanoYawDeg, output_f
 
     print("Plotting at " + str(x) + "," + str(y) + " using yaw " + str(PanoYawDeg))
 
+    pano_id = path_to_image[-26:-4]
+    output_dir = os.path.dirname(path_to_image)
+    print("Saving ML data for "+pano_id+" to "+output_dir)
     # Crop rectangle around label
     cropped_square = None
     try:
@@ -296,7 +299,17 @@ def make_single_crop(path_to_image, sv_image_x, sv_image_y, PanoYawDeg, output_f
         print(x, y)
         top_left_x = x - crop_width / 2
         top_left_y = y - crop_height / 2
-        cropped_square = im.crop((top_left_x, top_left_y, top_left_x + crop_width, top_left_y + crop_height))
+        #cropped_square = im.crop((top_left_x, top_left_y, top_left_x + crop_width, top_left_y + crop_height))
+        if label_type == 1:
+            filename = os.path.join(output_dir,pano_id+"_curbramp.txt")
+            with open(filename, "a") as myfile:
+                myfile.write(str(top_left_x)+" "+str(top_left_x+crop_width)+" "+str(top_left_y)+" "+str(top_left_y+crop_height)+"\n")
+
+        elif label_type == 2:
+            filename = os.path.join(output_dir,pano_id+"_nocurbramp.txt")
+            with open(filename, "a") as myfile:
+                myfile.write(str(top_left_x)+" "+str(top_left_x+crop_width)+" "+str(top_left_y)+" "+str(top_left_y+crop_height)+"\n")
+
     except (ValueError, IndexError) as e:
 
         predicted_crop_size = predict_crop_size_by_position(x, y, im_width, im_height)
@@ -305,8 +318,18 @@ def make_single_crop(path_to_image, sv_image_x, sv_image_y, PanoYawDeg, output_f
         print(x, y)
         top_left_x = x - crop_width / 2
         top_left_y = y - crop_height / 2
-        cropped_square = im.crop((top_left_x, top_left_y, top_left_x + crop_width, top_left_y + crop_height))
-    cropped_square.save(output_filename)
+        if label_type == 1:
+            filename = os.path.join(output_dir,pano_id+"_curbramp.txt")
+            with open(filename, "a") as myfile:
+                myfile.write(str(top_left_x)+" "+str(top_left_x+crop_width)+" "+str(top_left_y)+" "+str(top_left_y+crop_height)+"\n")
+
+        elif label_type == 2:
+            filename = os.path.join(output_dir,pano_id+"_nocurbramp.txt")
+            with open(filename, "a") as myfile:
+                myfile.write(str(top_left_x)+" "+str(top_left_x+crop_width)+" "+str(top_left_y)+" "+str(top_left_y+crop_height)+"\n")
+
+        #cropped_square = im.crop((top_left_x, top_left_y, top_left_x + crop_width, top_left_y + crop_height))
+    #cropped_square.save(output_filename)
 
     return
 
@@ -371,7 +394,7 @@ def bulk_extract_crops(path_to_db_export, path_to_gsv_scrapes, destination_dir, 
 
             crop_destination = os.path.join(destination_dir, str(label_type), str(counter) + ".jpg")
             if not os.path.exists(crop_destination):
-                make_single_crop(pano_img_path, sv_image_x, sv_image_y, pano_yaw_deg, crop_destination, pano_depth_path, draw_mark=mark_label)
+                make_single_crop(pano_img_path, sv_image_x, sv_image_y, pano_yaw_deg, crop_destination, pano_depth_path, label_type, draw_mark=mark_label)
                 print("Successfully extracted crop to " + str(counter) + ".jpg")
                 logging.info(str(counter) + ".jpg" + " " + pano_id + " " + str(sv_image_x)
                              + " " + str(sv_image_y) + " " + str(pano_yaw_deg) + " " + str(label_id))
