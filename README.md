@@ -1,5 +1,9 @@
 # sidewalk-panorama-tools
 
+## This repository has moved!
+See [https://github.com/ProjectSidewalk/sidewalk-panorama-tools](new repo) for latest version.
+
+
 This repository contains a set of Python scripts, intended to be used with data from [Project Sidewalk](https://github.com/ProjectSidewalk/SidewalkWebpage). They will take
 label data pulled from the Sidewalk database, and after downloading the appropriate panoramas from Google Street View, create a folder
 full of JPEG crops of these labels. These crops can be used for ML and computer vision applications.
